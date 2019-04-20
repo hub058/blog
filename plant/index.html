@@ -1,0 +1,264 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>HTML5 SVG 实现的草本植物生长动画</title>
+<style>
+body {
+    height: 100vh;
+    overflow: hidden;
+}
+#stage {
+    position: relative;
+    width: 800px;
+    height: 600px;
+    top: 100%;
+    left: 50%;
+    transform: translate(-50%, -100%);
+}
+path {
+    fill: none;
+    stroke: green;
+}
+button {
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    font-weight: bold;
+    box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.37);
+    text-transform: uppercase;
+    transition: all 0.5s ease;
+    line-height: 1.6;
+    padding: 8px 18px;
+    background: #ffc107;
+    color: #555;
+}
+button:focus {
+    outline: none;
+}
+button:hover {
+    border: 1px solid rgba(0, 0, 0, 0.5);
+    color: #000;
+}
+.hud {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 15px;
+}
+</style>
+
+</head>
+
+<body>
+<div class="hud">
+    <button id="rise">植物生长</button>
+</div>
+<svg id="stage"></svg>
+
+<script src='js/TweenMax.min.js'></script>
+<script>
+"use strict";
+
+function _classCallCheck(instance, Constructor) {
+    if (!(instance instanceof Constructor)) {
+        throw new TypeError("Cannot call a class as a function");
+    }
+}
+
+console.clear();
+var log = console.log.bind(console);
+
+var Grass = (function() {
+    function Grass(path, offset, width, height, minHeight, maxHeight, maxAngle, startAngle) {
+        _classCallCheck(this, Grass);
+
+        this.path = path;
+
+        // Start position
+        var sx = offset / 2 + random(width - offset);
+        var sy = height;
+
+        var offsetX = 1.5;
+
+        this.maxAngle = random(10, maxAngle);
+        this.angle = Math.random() * randomSign() * startAngle * Math.PI / 180;
+        this.height = random(minHeight, maxHeight);
+
+        // Curvature
+        var csx = sx - offsetX;
+        var csy = sy - this.height / (Math.random() < 0.5 ? 1 : 2);
+
+        // Parallel point
+        var psx = csx;
+        var psy = csy;
+
+        this.offsetBase = 6;
+
+        var dx = sx + this.offsetBase;
+        var dy = sy;
+
+        this.coords = [sx, sy, csx, csy, psx, psy, dx, dy];
+
+        this._height = this.height;
+        this.height = random(150, Math.min(350, this.height));
+
+        this.growing = false;
+        this.morphed = false;
+
+        this.start = 0;
+        this.elapsed = 0;
+
+        var ambient = 0.85;
+
+        var color = [Math.floor(random(16, 48) * ambient), Math.floor(random(100, 255) * ambient), Math.floor(random(16, 48) * ambient)];
+
+        var hx = this.offsetBase / 2;
+        var d = "M" + sx + "," + (sy + 2) + ",h" + hx + ",h" + hx + "z";
+
+        TweenLite.set(path, {
+            fill: "rgb(" + color + ")",
+            attr: {
+                d: d
+            }
+        });
+    }
+
+    Grass.prototype.rise = function rise() {
+
+        this.morphed = true;
+        this.growing = false;
+        this.elapsed = now() - this.start;
+
+        TweenLite.to(this, random(2.5, 3.5), {
+            height: this._height
+        });
+    };
+
+    Grass.prototype.morph = function morph(morphSVG) {
+        var _this = this;
+
+        var time = random(1.5, 3.5);
+        var delay = random(0.5, 4.5);
+
+        this.growing = true;
+
+        TweenLite.to(this.path, time, {
+            morphSVG: morphSVG,
+            delay: delay,
+            onComplete: function onComplete() {
+                return _this.rise();
+            }
+        });
+    };
+
+    Grass.prototype.update = function update(time) {
+
+        if (this.growing) return;
+
+        time -= this.elapsed;
+
+        var coords = this.coords;
+        var tip = Math.sin(time * 0.0007);
+
+        var th = this.angle + Math.PI / 2 + tip * Math.PI / 180 * (this.maxAngle * Math.cos(time * 0.0002));
+        var px = coords[0] + this.offsetBase + this.height * Math.cos(th);
+        var py = coords[1] - this.height * Math.sin(th);
+
+        var d = "M" + coords[0] + "," + coords[1];
+        d += "C" + coords[0] + "," + coords[1] + "," + coords[2] + "," + coords[3] + "," + px + "," + py;
+        d += "C" + px + "," + py + "," + coords[4] + "," + coords[5] + "," + coords[6] + "," + coords[7] + "z";
+
+        if (!this.morphed) {
+            this.morph(d);
+            this.start = now();
+        } else {
+            this.path.setAttribute("d", d);
+        }
+    };
+
+    Grass.prototype.destroy = function destroy() {
+
+        TweenLite.killTweensOf(this);
+        TweenLite.killTweensOf(this.path);
+
+        this.path.parentElement.removeChild(this.path);
+    };
+
+    return Grass;
+})();
+
+var xmlns = "http://www.w3.org/2000/svg";
+
+var perf = window.performance;
+var now = perf ? perf.now.bind(perf) : Date.now;
+
+var stage = document.querySelector("#stage");
+var riseUp = document.querySelector("#rise");
+
+var start = now();
+var blades = [];
+
+var offset = 400;
+var width = 1200;
+var height = 600;
+var total = 40;
+
+var minHeight = 125;
+var maxHeight = height * 0.8;
+var maxAngle = 20;
+var startAngle = 40;
+
+TweenLite.set(stage, {
+    width: width,
+    height: height
+});
+
+riseUp.addEventListener("click", init);
+TweenLite.ticker.addEventListener("tick", render);
+
+init();
+
+function init() {
+
+    blades.forEach(function(blade) {
+        return blade.destroy();
+    });
+
+    blades = [];
+
+    for (var i = 0; i < total; i++) {
+        var path = createSVG("path", stage);
+        blades[i] = new Grass(path, offset, width, height, minHeight, maxHeight, maxAngle, startAngle);
+    }
+}
+
+function render() {
+
+    var elapsed = now() - start;
+
+    if (!blades.length) return;
+
+    for (var i = 0; i < total; i++) {
+        blades[i].update(elapsed);
+    }
+}
+
+function createSVG(type, parent) {
+    var node = document.createElementNS(xmlns, type);
+    parent && parent.appendChild(node);
+    return node;
+}
+
+function random(min, max) {
+    if (max == null) {
+        max = min;
+        min = 0;
+    }
+    return min + Math.random() * (max - min);
+}
+
+function randomSign() {
+    return Math.random() < 0.5 ? 1 : -1;
+}
+</script>
+</body>
+</html>

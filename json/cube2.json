@@ -1,0 +1,30 @@
+{
+    "title": "全景图",
+    "author": "QQ:877058128",
+    "preview": "../img/quanjingtu/cube_front.jpg",
+    "type": "cubemap",
+    "cubeMap": [
+        "../img/quanjingtu/cube_front.jpg",
+        "../img/quanjingtu/cube_right.jpg",
+        "../img/quanjingtu/cube_behind.jpg",
+        "../img/quanjingtu/cube_left.jpg",
+        "../img/quanjingtu/cube_up.jpg",
+        "../img/quanjingtu/cube_down.jpg"
+    ],
+    
+    "hotSpots": [
+        {
+            "pitch": -12,
+            "yaw": 170,
+            "type": "info",
+            "text": "好想去旅游."
+        },
+        {
+            "pitch": 10,
+            "yaw": -50,
+            "type": "info",
+            "text": "重回拉萨.",
+            "image": "/img/psb.jpg"
+        }
+    ]
+}

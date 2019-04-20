@@ -1,0 +1,28 @@
+{
+    "title": "全景图",
+    "author": "微信:zed058",
+    "preview": "../img/quanjingtu/examplepano-preview.jpg",
+    "type": "cubemap",
+    "cubeMap": [
+        "../img/quanjingtu/examplepanocube0.jpg",
+        "../img/quanjingtu/examplepanocube1.jpg",
+        "../img/quanjingtu/examplepanocube2.jpg",
+        "../img/quanjingtu/examplepanocube3.jpg",
+        "../img/quanjingtu/examplepanocube4.jpg",
+        "../img/quanjingtu/examplepanocube5.jpg"
+    ],
+    "hotSpots": [
+        {
+            "pitch": -12,
+            "yaw": 170,
+            "type": "info",
+            "text": "先把媳妇问题给解决了"
+        },
+        {
+            "pitch": 20,
+            "yaw": -50,
+            "type": "info",
+            "text": "可以添加文字,链接,图片,视频,场景等"
+        }
+    ]
+}
